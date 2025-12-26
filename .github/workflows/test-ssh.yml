@@ -1,4 +1,4 @@
-name: Test SSH to EC2
+name: Build & Deploy to EC2
 
 on:
   push:
@@ -6,18 +6,37 @@ on:
       - main
 
 jobs:
-  ssh-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test SSH connection
+      # 1️⃣ Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Login to GitHub Container Registry
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 3️⃣ Build & Push Docker Image (v1)
+      - name: Build and push Docker image
+        run: |
+          IMAGE=ghcr.io/megatechbot507/my-todo-app:v1
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      # 4️⃣ Deploy to EC2
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.TEST_HOST }}
           username: ${{ secrets.TEST_USER }}
           key: ${{ secrets.TEST_SSH_KEY }}
           script: |
-            echo "✅ SSH CONNECTED SUCCESSFULLY"
-            whoami
-            hostname
-            docker ps
+            cd ~/app
+            docker pull ghcr.io/megatechbot507/my-todo-app:v1
+            docker compose up -d
