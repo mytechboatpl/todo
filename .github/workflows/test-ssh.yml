@@ -14,18 +14,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Login to GitHub Container Registry
+      # 2️⃣ Login to GitHub Container Registry (GHCR)
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 3️⃣ Build & Push Docker Image (v1)
+      # 3️⃣ Build & Push Docker Image
       - name: Build and push Docker image
         run: |
-          IMAGE=ghcr.io/megatechbot507/my-todo-app:v1
+          IMAGE=ghcr.io/${{ github.repository_owner }}/my-todo-app:latest
           docker build -t $IMAGE .
           docker push $IMAGE
 
@@ -37,6 +37,7 @@ jobs:
           username: ${{ secrets.TEST_USER }}
           key: ${{ secrets.TEST_SSH_KEY }}
           script: |
+            mkdir -p ~/app
             cd ~/app
-            docker pull ghcr.io/megatechbot507/my-todo-app:v1
+            docker pull ghcr.io/${{ github.repository_owner }}/my-todo-app:latest
             docker compose up -d
