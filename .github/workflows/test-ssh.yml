@@ -1,0 +1,23 @@
+name: Test SSH to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ssh-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.TEST_HOST }}
+          username: ${{ secrets.TEST_USER }}
+          key: ${{ secrets.TEST_SSH_KEY }}
+          script: |
+            echo "✅ SSH CONNECTED SUCCESSFULLY"
+            whoami
+            hostname
+            docker ps
